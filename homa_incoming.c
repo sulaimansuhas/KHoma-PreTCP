@@ -276,6 +276,7 @@ int homa_copy_to_user(struct homa_rpc *rpc)
 					}
 					chunk_size = buf_bytes;
 				}
+				/*
 				error = import_single_range(READ, dst,
 						chunk_size, &iov, &iter);
 				if (error)
@@ -283,6 +284,10 @@ int homa_copy_to_user(struct homa_rpc *rpc)
 				error = skb_copy_datagram_iter(skbs[i],
 						sizeof(*h) + copied, &iter,
 						chunk_size);
+				*/
+
+				error = skb_copy_bits(skbs[i], sizeof(*h) + copied, dst,chunk_size);
+
 				if (error)
 					goto free_skbs;
 				copied += chunk_size;
