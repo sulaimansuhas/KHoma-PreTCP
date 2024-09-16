@@ -138,23 +138,26 @@ void *homa_skb_extend_frags(struct homa *homa, struct sk_buff *skb, int *length)
 {
 	struct skb_shared_info *shinfo = skb_shinfo(skb);
 	struct homa_core *core = homa_cores[raw_smp_processor_id()];
-	skb_frag_t *frag = &shinfo->frags[shinfo->nr_frags - 1];
+	skb_frag_t *frag; 
 	char *result;
 	int actual_size = *length;
 
 	/* Can we just extend the skb's last fragment? */
-	if ((shinfo->nr_frags > 0) && (frag->bv_page == core->skb_page)
-			&& (core->page_inuse < core->page_size)
-			&& ((frag->bv_offset + frag->bv_len)
-			== core->page_inuse)) {
-		if ((core->page_size - core->page_inuse) < actual_size)
-			actual_size = core->page_size - core->page_inuse;
-		*length = actual_size;
-		frag->bv_len += actual_size;
-		result = page_address(frag->bv_page) + core->page_inuse;
-		core->page_inuse += actual_size;
-		skb_len_add(skb, actual_size);
-		return result;
+	if (shinfo->nr_frags > 0){
+		frag = &shinfo->frags[shinfo->nr_frags - 1];
+		if ((frag->bv_page == core->skb_page)
+		&& (core->page_inuse < core->page_size)
+		&& ((frag->bv_offset + frag->bv_len)
+		== core->page_inuse)) {
+			if ((core->page_size - core->page_inuse) < actual_size)
+				actual_size = core->page_size - core->page_inuse;
+			*length = actual_size;
+			frag->bv_len += actual_size;
+			result = page_address(frag->bv_page) + core->page_inuse;
+			core->page_inuse += actual_size;
+			skb_len_add(skb, actual_size);
+			return result;
+	}
 	}
 
 	/* Need to add a new fragment to the skb. */
